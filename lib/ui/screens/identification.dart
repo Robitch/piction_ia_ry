@@ -39,7 +39,7 @@ class _IdentificationState extends State<Identification> {
                 ),
               ),
               const Image(
-                  image: NetworkImage('https://img.freepik.com/premium-vector/pencil-robot-logo_92637-150.jpg')),
+                  image: AssetImage('assets/images/imageExample.jpg')),
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

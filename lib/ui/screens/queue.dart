@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class Queue extends StatefulWidget {
-  const Queue({super.key});
+  final String waitingText; // Paramètre texte
+
+  const Queue({super.key, required this.waitingText});
 
   @override
   State<Queue> createState() => _QueueState();
@@ -18,7 +20,7 @@ class _QueueState extends State<Queue> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'En attente des autres joueurs',
+              widget.waitingText, // Utilisation du texte passé en paramètre
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
