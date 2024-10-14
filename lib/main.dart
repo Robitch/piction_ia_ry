@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:piction_ia_ry/ui/screens/challengeBuilder.dart';
 import 'package:piction_ia_ry/ui/screens/hub.dart';
 import 'package:piction_ia_ry/ui/screens/identification.dart';
+import 'package:piction_ia_ry/ui/screens/queue.dart';
+import 'package:piction_ia_ry/ui/screens/teamBuilder.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,7 +38,7 @@ class MyApp extends StatelessWidget {
 
         useMaterial3: true,
       ),
-      home: Identification()
+      home: ChallengeBuilder(),
     );
   }
 }
