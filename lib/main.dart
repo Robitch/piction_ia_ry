@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
 
         useMaterial3: true,
       ),
-        home: Queue(waitingText:"nohan blablabla")
+        home: Identification()
     );
   }
 }

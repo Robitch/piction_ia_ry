@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:piction_ia_ry/ui/screens/hub.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-
 class Identification extends StatefulWidget {
   const Identification({super.key});
 
@@ -11,12 +10,13 @@ class Identification extends StatefulWidget {
 }
 
 class _IdentificationState extends State<Identification> {
-
   final myController = TextEditingController();
+  final passwordController = TextEditingController(); // Controller pour le mot de passe
 
   @override
   void dispose() {
     myController.dispose();
+    passwordController.dispose(); // Dispose du contrôleur de mot de passe
     super.dispose();
   }
 
@@ -38,11 +38,16 @@ class _IdentificationState extends State<Identification> {
                   fontFamily: GoogleFonts.cabinSketch().fontFamily,
                 ),
               ),
-              const Image(
-                  image: AssetImage('assets/images/imageExample.jpg')),
+              Image.asset(
+                'assets/images/robotLogo.png', // Remplace par le chemin de ton image
+                width: 200,
+                height: 200,
+                fit: BoxFit.cover,
+              ),
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
+                  // Champ pour le pseudo
                   SizedBox(
                     width: 250,
                     child: TextField(
@@ -60,37 +65,65 @@ class _IdentificationState extends State<Identification> {
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
                           borderSide: BorderSide(
-                              color: Colors.white,
-                              width: 2,
+                            color: Colors.white,
+                            width: 2,
                           ),
                         ),
                       ),
                     ),
                   ),
                   SizedBox(height: 20),
+                  // Champ pour le mot de passe
+                  SizedBox(
+                    width: 250,
+                    child: TextField(
+                      controller: passwordController,
+                      textAlign: TextAlign.center,
+                      obscureText: true, // Masque le texte
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.all(20),
+                        hintText: 'Saisir le mot de passe',
+                        hintStyle: TextStyle(
+                          color: Colors.white,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  // Bouton d'enregistrement
                   SizedBox(
                     width: 250,
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const Hub())
+                          MaterialPageRoute(builder: (context) => const Hub()),
                         );
                       },
                       child: Text('Enregistrer'),
                       style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)), //padding
-                        //blue color, rounded borders white border 2 px, text color white
-                        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFFe77708)), //blue color
-                        shape: WidgetStateProperty.all<OutlinedBorder>(RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        )),
-                        foregroundColor: WidgetStateProperty.all<Color>(Colors.white), //text color white
+                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)), // padding
+                        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFFe77708)), // Couleur orange
+                        shape: MaterialStateProperty.all<OutlinedBorder>(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        foregroundColor: MaterialStateProperty.all<Color>(Colors.white), // Couleur du texte
                       ),
                     ),
                   ),
                 ],
               ),
-      
             ],
           ),
         ),
