@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:piction_ia_ry/ui/screens/scanner.dart';
+import 'package:piction_ia_ry/ui/forms/create_form.dart';
+
 
 class Hub extends StatefulWidget {
   const Hub({super.key});
@@ -19,7 +22,7 @@ class _HubState extends State<Hub> {
       child: Scaffold(
         body: Center(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Text(
                 'PICTION.IA.RY',
@@ -28,10 +31,31 @@ class _HubState extends State<Hub> {
                   fontFamily: GoogleFonts.cabinSketch().fontFamily,
                 ),
               ),
-              Text(
-                'Bonjour, pseudo',
-                style: TextStyle(
-                  fontSize: 24,
+              // Text(
+              //   'Bonjour, pseudo',
+              //   style: TextStyle(
+              //     fontSize: 24,
+              //   ),
+              // ),
+              // Image + text
+              Padding(
+                padding: const EdgeInsets.fromLTRB(50, 100, 50, 100),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image(
+                      image: NetworkImage('https://img.freepik.com/premium-vector/pencil-robot-logo_92637-150.jpg'),
+                      width: 150,
+                    ),
+                    Flexible(
+                      child: Text(
+                        'Bonjour pseudo !',
+                        style: TextStyle(
+                          fontSize: 26,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Column(
@@ -41,11 +65,33 @@ class _HubState extends State<Hub> {
                     width: 250,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const Hub())
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Ajout d\'un challenge'),
+                              content: MyForm(),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: Text('Cancel'),
+                                ),
+                              ],
+                            );
+                          },
                         );
                       },
-                      child: Text('Enregistrer'),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Icon(
+                              Icons.add,
+                          ),
+                          Text('Créer une partie'),
+                        ],
+                      ),
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)), //padding
                         //blue color, rounded borders white border 2 px, text color white
@@ -63,10 +109,19 @@ class _HubState extends State<Hub> {
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const Hub())
+                            MaterialPageRoute(builder: (context) => const QRViewExample())
                         );
                       },
-                      child: Text('Enregistrer'),
+                      //icon + text
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Icon(
+                              Icons.qr_code,
+                          ),
+                          Text('Rejoindre une partie'),
+                        ],
+                      ),
                       style: ButtonStyle(
                         padding: WidgetStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)), //padding
                         //blue color, rounded borders white border 2 px, text color white
