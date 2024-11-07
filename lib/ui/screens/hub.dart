@@ -34,7 +34,7 @@ class _HubState extends State<Hub> {
                   Navigator.of(context).pop();
                   await apiService.joinGameSession(sessionId, "blue");
                   Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => TeamBuilder(sessionID: int.parse(sessionId)),
+                    builder: (context) => TeamBuilder(gameSessionId: sessionId),
                   ));
                 },
                 child: const Text('OK'),

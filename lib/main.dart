@@ -45,11 +45,7 @@ class MyApp extends StatelessWidget {
 
         useMaterial3: true,
       ),
-<<<<<<< Updated upstream
       home: Identification()
-=======
-        home: TeamBuilder(gameSessionId: '276'),
->>>>>>> Stashed changes
     );
   }
 }
