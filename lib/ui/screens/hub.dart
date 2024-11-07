@@ -31,18 +31,20 @@ class _HubState extends State<Hub> {
             actions: [
               TextButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
                   await apiService.joinGameSession(sessionId, "blue");
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => TeamBuilder(gameSessionId: sessionId),
-                  ));
+                  print('Session joined');
+                  Navigator.of(context).pop();
                 },
                 child: const Text('OK'),
               ),
             ],
           );
         },
-      );
+      ).then((value) {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => TeamBuilder(gameSessionId: sessionId),
+        ));
+      });
     } catch (error) {
       print('Error creating game session: $error');
     }

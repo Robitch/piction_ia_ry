@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:piction_ia_ry/services/api_service.dart';
 import 'package:piction_ia_ry/services/data.dart' as data;
 
 class TeamBuilder extends StatefulWidget {
-  final String gameSessionId; // Paramètre pour l'ID de la session de jeu
+  final String gameSessionId;
 
   const TeamBuilder({super.key, required this.gameSessionId});
 
@@ -21,19 +19,19 @@ class _TeamBuilderState extends State<TeamBuilder> {
   @override
   void initState() {
     super.initState();
-    _fetchTeamData(); // Fetch initial team data when the page loads
-    print('Game Session ID: ${widget.gameSessionId}');
-    // print les deux équipes
-    print('Équipe Bleue: $teamBlue');
-    print('Équipe Orange: $teamOrange');
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _fetchTeamData();
   }
 
   Future<void> _fetchTeamData() async {
     try {
-      final teamData = await ApiService().joinGameSession(widget.gameSessionId, '');
+      final teamData = await ApiService().getGameSession(widget.gameSessionId);
       setState(() {
-        teamBlue = teamData['blue_team'] ?? []; // Assigner une liste vide si null
-        teamOrange = teamData['red_team'] ?? []; // Assigner une liste vide si null
+        teamBlue = teamData['blue_team'] ?? [];
+        teamOrange = teamData['red_team'] ?? [];
         _checkGameReady();
       });
     } catch (e) {
@@ -42,22 +40,37 @@ class _TeamBuilderState extends State<TeamBuilder> {
   }
 
   Future<void> _joinTeam(String teamColor) async {
-    if ((teamColor == 'blue' && teamBlue.length < 2) ||
-        (teamColor == 'red' && teamOrange.length < 2)) {
+    bool isOnTeamBlue = teamBlue.contains(data.userId);
+    bool isOnTeamOrange = teamOrange.contains(data.userId);
+
+    print('isOnTeamBlue: $isOnTeamBlue');
+    print('isOnTeamOrange: $isOnTeamOrange');
+
+      if ((teamColor == 'blue' && isOnTeamOrange) ||
+          (teamColor == 'red' && isOnTeamBlue)) {
+        try {
+          await ApiService().leaveGameSession(widget.gameSessionId);
+          print('Left previous team successfully.');
+        } catch (e) {
+          print('Error leaving team: $e');
+          return;
+        }
+      }
+
+      // Now attempt to join the selected team
       try {
-        final teamData = await ApiService().joinGameSession(widget.gameSessionId, teamColor);
+        final teamData =
+        await ApiService().joinGameSession(widget.gameSessionId, teamColor);
         setState(() {
-          teamBlue = teamData['blue_team'] ?? []; // Assigner une liste vide si null
-          teamOrange = teamData['red_team'] ?? []; // Assigner une liste vide si null
+          teamBlue = teamData['blue_team'] ?? [];
+          teamOrange = teamData['red_team'] ?? [];
           _checkGameReady();
         });
       } catch (e) {
         print('Error joining team: $e');
       }
-    } else {
-      print('Team is full');
-    }
   }
+
 
   void _checkGameReady() {
     setState(() {
@@ -85,57 +98,95 @@ class _TeamBuilderState extends State<TeamBuilder> {
             Expanded(
               child: Column(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Équipe Bleue',
-                        style: TextStyle(fontSize: 24, color: Colors.blue, fontWeight: FontWeight.bold),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => _joinTeam('blue'),
-                        child: Text('Rejoindre'),
-                      ),
-                    ],
-                  ),
-                  for (var playerId in teamBlue)
-                    ListTile(
-                      title: Text('Player $playerId'),
+                  Expanded(
+                    child: _buildTeamCard(
+                      'Équipe Bleue',
+                      Colors.blue,
+                      teamBlue,
+                          () => _joinTeam('blue'),
                     ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Équipe Orange',
-                        style: TextStyle(fontSize: 24, color: Colors.orange, fontWeight: FontWeight.bold),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => _joinTeam('red'),
-                        child: Text('Rejoindre'),
-                      ),
-                    ],
                   ),
-                  for (var playerId in teamOrange)
-                    ListTile(
-                      title: Text('Player $playerId'),
+                  SizedBox(height: 20),
+                  Expanded(
+                    child: _buildTeamCard(
+                      'Équipe Orange',
+                      Colors.orange,
+                      teamOrange,
+                          () => _joinTeam('red'),
                     ),
+                  ),
                 ],
               ),
             ),
             if (isGameReady)
-              ElevatedButton(
-                onPressed: () => {},
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                child: ElevatedButton(
+                  onPressed: () => {},
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    backgroundColor: Colors.green,
+                  ),
+                  child: Text(
+                    'Lancer la Partie',
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ),
-                child: Text('Lancer la Partie'),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeamCard(String teamName, Color color, List<int> teamMembers, VoidCallback onJoinPressed) {
+    return Card(
+      color: color.withOpacity(0.9),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  teamName,
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (teamMembers.length < 2)
+                  ElevatedButton(
+                    onPressed: onJoinPressed,
+                    child: Text('Rejoindre'),
+                  ),
+              ],
+            ),
+            Divider(),
+            Expanded(
+              child: ListView.builder(
+                itemCount: teamMembers.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    leading: Icon(
+                      Icons.person,
+                      color: Colors.black,
+                    ),
+                    title: Text(
+                      'Player ${teamMembers[index]}',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),

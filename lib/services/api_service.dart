@@ -72,8 +72,8 @@ class ApiService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = json.decode(response.body);
-      return data['id'].toString(); // Renvoie l'ID de la session
+      final _data = json.decode(response.body);
+      return _data['id'].toString(); // Renvoie l'ID de la session
     } else {
       throw Exception('Failed to create game session');
     }
@@ -98,5 +98,39 @@ class ApiService {
     }
   }
 
+  // Méthode pour récupérer une session de jeu
+  Future<Map<String, List<int>>> getGameSession(String sessionId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/game_sessions/$sessionId'),
+      headers: _headers(),
+    );
 
+    if (response.statusCode == 200) {
+      final _data = json.decode(response.body);
+      return {
+        'blue_team': List<int>.from(_data['blue_team']),
+        'red_team': List<int>.from(_data['red_team']),
+      };
+    } else {
+      throw Exception('Failed to get game session');
+    }
+  }
+
+  // Méthode pour quitter une session de jeu
+  Future<void> leaveGameSession(String sessionId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/game_sessions/$sessionId/leave'),
+      headers: _headers(),
+    );
+
+    print('$baseUrl/game_sessions/$sessionId/leave');
+
+    // print all the response
+    print(response.body);
+
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to leave game session');
+    }
+  }
 }
