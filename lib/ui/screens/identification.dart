@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:piction_ia_ry/ui/screens/hub.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:piction_ia_ry/services/data.dart' as data;
+import 'package:piction_ia_ry/services/api_service.dart';
 
 class Identification extends StatefulWidget {
   const Identification({super.key});
@@ -26,47 +28,25 @@ class _IdentificationState extends State<Identification> {
 
   // Fonction pour gérer la connexion
   Future<void> login() async {
-    final response = await http.post(
-      Uri.parse('$apiUrl/login'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': myController.text,
-        'password': passwordController.text,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      final token = data['token']; // Récupérer le JWT
-
-      // Naviguer vers la page suivante en passant le token si nécessaire
+    try {
+      await ApiService().login(myController.text, passwordController.text);
+      print('Login successful');
+      await ApiService().fetchPlayerInfo();
+      print('Player info fetched');
       Navigator.of(context).push(
         MaterialPageRoute(builder: (context) => const Hub()),
       );
-    } else {
-      // Gérer les erreurs (afficher un message d'erreur, etc.)
-      showErrorDialog('Erreur de connexion. Veuillez vérifier vos informations.');
+    } catch (error) {
+      showErrorDialog('Erreur de connexion. Veuillez réessayer.');
     }
   }
 
   // Fonction pour gérer l'inscription
   Future<void> register() async {
-    final response = await http.post(
-      Uri.parse('$apiUrl/players'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'name': myController.text,
-        'password': passwordController.text,
-      }),
-    );
-
-    if (response.statusCode == 201) {
-      // Succès : Inscription réussie, redirection ou affichage d'un message
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const Hub()),
-      );
-    } else {
-      // Gérer les erreurs (afficher un message d'erreur, etc.)
+    try {
+      await ApiService().register(myController.text, passwordController.text);
+     login();
+    } catch (error) {
       showErrorDialog('Erreur d\'inscription. Veuillez réessayer.');
     }
   }

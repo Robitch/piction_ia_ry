@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:piction_ia_ry/services/api_service.dart';
+import 'package:piction_ia_ry/services/data.dart' as data;
 
 class TeamBuilder extends StatefulWidget {
   final String gameSessionId; // Paramètre pour l'ID de la session de jeu
@@ -12,56 +14,48 @@ class TeamBuilder extends StatefulWidget {
 }
 
 class _TeamBuilderState extends State<TeamBuilder> {
-  String? playerId;
-  List<String> teamBlue = [];
-  List<String> teamOrange = [];
+  List<int> teamBlue = [];
+  List<int> teamOrange = [];
   bool isGameReady = false;
-
-  final String apiUrl = 'https://pictioniary.wevox.cloud/api';
-  final String jwtToken = 'your_jwt_token'; // Remplacez par votre JWT
 
   @override
   void initState() {
     super.initState();
-    _fetchPlayerInfo();
+    _fetchTeamData(); // Fetch initial team data when the page loads
+    print('Game Session ID: ${widget.gameSessionId}');
+    // print les deux équipes
+    print('Équipe Bleue: $teamBlue');
+    print('Équipe Orange: $teamOrange');
   }
 
-  Future<void> _fetchPlayerInfo() async {
-    final response = await http.get(Uri.parse('$apiUrl/me'), headers: {
-      'Authorization': 'Bearer $jwtToken'
-    });
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
+  Future<void> _fetchTeamData() async {
+    try {
+      final teamData = await ApiService().joinGameSession(widget.gameSessionId, '');
       setState(() {
-        playerId = data['id'];
+        teamBlue = teamData['blue_team'] ?? []; // Assigner une liste vide si null
+        teamOrange = teamData['red_team'] ?? []; // Assigner une liste vide si null
+        _checkGameReady();
       });
+    } catch (e) {
+      print('Error fetching team data: $e');
     }
   }
 
   Future<void> _joinTeam(String teamColor) async {
     if ((teamColor == 'blue' && teamBlue.length < 2) ||
-        (teamColor == 'orange' && teamOrange.length < 2)) {
-      final response = await http.post(
-        Uri.parse('$apiUrl/game_sessions/${widget.gameSessionId}/join'),
-        headers: {
-          'Authorization': 'Bearer $jwtToken',
-          'Content-Type': 'application/json'
-        },
-        body: json.encode({'color': teamColor}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+        (teamColor == 'red' && teamOrange.length < 2)) {
+      try {
+        final teamData = await ApiService().joinGameSession(widget.gameSessionId, teamColor);
         setState(() {
-          if (teamColor == 'blue') {
-            teamBlue.add(data['player']['name']);
-          } else {
-            teamOrange.add(data['player']['name']);
-          }
+          teamBlue = teamData['blue_team'] ?? []; // Assigner une liste vide si null
+          teamOrange = teamData['red_team'] ?? []; // Assigner une liste vide si null
           _checkGameReady();
         });
+      } catch (e) {
+        print('Error joining team: $e');
       }
+    } else {
+      print('Team is full');
     }
   }
 
@@ -69,19 +63,6 @@ class _TeamBuilderState extends State<TeamBuilder> {
     setState(() {
       isGameReady = teamBlue.length == 2 && teamOrange.length == 2;
     });
-  }
-
-  Future<void> _startGame() async {
-    final response = await http.post(
-      Uri.parse('$apiUrl/game_sessions/${widget.gameSessionId}/start'),
-      headers: {
-        'Authorization': 'Bearer $jwtToken'
-      },
-    );
-
-    if (response.statusCode == 200) {
-      // Traitez le début de la partie ici (par ex., redirigez vers la page de jeu)
-    }
   }
 
   @override
@@ -96,14 +77,11 @@ class _TeamBuilderState extends State<TeamBuilder> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Affichage de l'ID de la session de jeu
             Text(
               'ID de la Session de Jeu: ${widget.gameSessionId}',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 20),
-
-            // Section pour l'équipe Bleue
             Expanded(
               child: Column(
                 children: [
@@ -120,14 +98,13 @@ class _TeamBuilderState extends State<TeamBuilder> {
                       ),
                     ],
                   ),
-                  for (var player in teamBlue)
+                  for (var playerId in teamBlue)
                     ListTile(
-                      title: Text(player),
+                      title: Text('Player $playerId'),
                     ),
                 ],
               ),
             ),
-            // Section pour l'équipe Orange
             Expanded(
               child: Column(
                 children: [
@@ -139,22 +116,21 @@ class _TeamBuilderState extends State<TeamBuilder> {
                         style: TextStyle(fontSize: 24, color: Colors.orange, fontWeight: FontWeight.bold),
                       ),
                       ElevatedButton(
-                        onPressed: () => _joinTeam('orange'),
+                        onPressed: () => _joinTeam('red'),
                         child: Text('Rejoindre'),
                       ),
                     ],
                   ),
-                  for (var player in teamOrange)
+                  for (var playerId in teamOrange)
                     ListTile(
-                      title: Text(player),
+                      title: Text('Player $playerId'),
                     ),
                 ],
               ),
             ),
-            // Bouton pour démarrer la partie
             if (isGameReady)
               ElevatedButton(
-                onPressed: _startGame,
+                onPressed: () => {},
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),

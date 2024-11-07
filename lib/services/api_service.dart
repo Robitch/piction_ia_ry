@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:piction_ia_ry/services/data.dart' as data;
 
 class ApiService {
   final String baseUrl = 'https://pictioniary.wevox.cloud/api';
 
   // Votre token d'authentification
-  final String token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6NTUsIm5hbWUiOiJSb2JpbiJ9.DGFj4ftcW8McFAUTII1ujIY42_r7OsLICVOXjiGfYnI';
+  final String token = data.token;
 
   // Méthode pour configurer les en-têtes
   Map<String, String> _headers() {
@@ -13,6 +14,54 @@ class ApiService {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     };
+  }
+
+  // Méthode pour se connecter
+  Future<void> login(String name, String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final _data = jsonDecode(response.body);
+      data.token = _data['token']; // Récupérer le JWT
+    } else {
+      throw Exception('Failed to login');
+    }
+  }
+
+  // Méthode pour s'inscrire
+  Future<void> register(String name, String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/players'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'name': name,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to register');
+    }
+  }
+
+  // Méthode pour récupérer les informations du joueur
+  Future<void> fetchPlayerInfo() async {
+    final response = await http.get(Uri.parse('$baseUrl/me'), headers: _headers());
+
+    if (response.statusCode == 200) {
+      final _data = json.decode(response.body);
+      data.username = _data['name'];
+      data.userId = _data['id'];
+    } else {
+      throw Exception('Failed to fetch player info');
+    }
   }
 
   // Méthode pour créer une session de jeu
@@ -31,7 +80,7 @@ class ApiService {
   }
 
   // Méthode pour rejoindre une session de jeu
-  Future<void> joinGameSession(String sessionId, String color) async {
+  Future<Map<String, List<int>>> joinGameSession(String sessionId, String color) async {
     final response = await http.post(
       Uri.parse('$baseUrl/game_sessions/$sessionId/join'),
       headers: _headers(),
@@ -39,8 +88,11 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print('Joined game session: $data'); // Pour le debug
+      final _data = json.decode(response.body);
+      return {
+        'blue_team': List<int>.from(_data['blue_team']),
+        'red_team': List<int>.from(_data['red_team']),
+      };
     } else {
       throw Exception('Failed to join game session');
     }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:piction_ia_ry/services/api_service.dart';
 import 'package:piction_ia_ry/ui/screens/teamBuilder.dart';
+import 'package:piction_ia_ry/services/data.dart' as data;
+
 
 
 class Hub extends StatefulWidget {
@@ -48,9 +48,16 @@ class _HubState extends State<Hub> {
     }
   }
 
-  // goToLobby function, which will be called when the user clicks the "Join" button,
-  // and will display a dialog to enter the session ID.
-  // then call the goToLobby function from the apiClass
+  Future<void> joinGameSession() async {
+    try {
+   //   await apiService.joinGameSession(sessionIdController.text, selectedColor);
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => TeamBuilder(gameSessionId: sessionIdController.text),
+      ));
+    } catch (error) {
+      print('Error joining game session: $error');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +88,7 @@ class _HubState extends State<Hub> {
                     ),
                     Flexible(
                       child: Text(
-                        'Bonjour pseudo !',
+                        'Bonjour ' + data.username + '!',
                         style: TextStyle(
                           fontSize: 26,
                         ),
@@ -161,10 +168,7 @@ class _HubState extends State<Hub> {
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
-                                    apiService.joinGameSession(
-                                      sessionIdController.text,
-                                      selectedColor,
-                                    );
+                                    joinGameSession();
                                   },
                                   child: Text('Rejoindre'),
                                 ),
