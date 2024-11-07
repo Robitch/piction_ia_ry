@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:piction_ia_ry/ui/screens/scanner.dart';
-import 'package:piction_ia_ry/ui/forms/create_form.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:piction_ia_ry/services/api_service.dart';
+import 'package:piction_ia_ry/ui/screens/teamBuilder.dart';
 
 
 class Hub extends StatefulWidget {
@@ -12,6 +14,43 @@ class Hub extends StatefulWidget {
 }
 
 class _HubState extends State<Hub> {
+  final TextEditingController sessionIdController = TextEditingController();
+  String selectedColor = 'blue'; // Couleur par défaut
+
+  final ApiService apiService = ApiService();
+
+  Future<void> createGameSession() async {
+    try {
+      final sessionId = await apiService.createGameSession();
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Session Created'),
+            content: Text('Game Session ID: $sessionId'),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await apiService.joinGameSession(sessionId, "blue");
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => TeamBuilder(sessionID: int.parse(sessionId)),
+                  ));
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } catch (error) {
+      print('Error creating game session: $error');
+    }
+  }
+
+  // goToLobby function, which will be called when the user clicks the "Join" button,
+  // and will display a dialog to enter the session ID.
+  // then call the goToLobby function from the apiClass
 
   @override
   Widget build(BuildContext context) {
@@ -31,20 +70,13 @@ class _HubState extends State<Hub> {
                   fontFamily: GoogleFonts.cabinSketch().fontFamily,
                 ),
               ),
-              // Text(
-              //   'Bonjour, pseudo',
-              //   style: TextStyle(
-              //     fontSize: 24,
-              //   ),
-              // ),
-              // Image + text
               Padding(
                 padding: const EdgeInsets.fromLTRB(50, 100, 50, 100),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image(
-                      image: NetworkImage('https://img.freepik.com/premium-vector/pencil-robot-logo_92637-150.jpg'),
+                    Image.network(
+                      'https://img.freepik.com/premium-vector/pencil-robot-logo_92637-150.jpg',
                       width: 150,
                     ),
                     Flexible(
@@ -64,19 +96,77 @@ class _HubState extends State<Hub> {
                   SizedBox(
                     width: 250,
                     child: ElevatedButton(
+                      onPressed: createGameSession,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Icon(Icons.add),
+                          Text('Créer une partie'),
+                        ],
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.all(20),
+                        backgroundColor: Color(0xFFe77708),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  SizedBox(
+                    width: 250,
+                    child: ElevatedButton(
                       onPressed: () {
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
-                              title: Text('Ajout d\'un challenge'),
-                              content: MyForm(),
+                              title: Text('Rejoindre une partie via ID'),
+                              content: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextField(
+                                    controller: sessionIdController,
+                                    keyboardType: TextInputType.number,
+                                    decoration: InputDecoration(
+                                        labelText: 'ID de la session',
+                                      ),
+                                  ),
+                                 // DropdownButton<String>(
+                                 //   value: selectedColor,
+                                 //   items: <String>['red', 'blue']
+                                 //       .map((String value) {
+                                 //     return DropdownMenuItem<String>(
+                                 //       value: value,
+                                 //       child: Text(value),
+                                 //     );
+                                 //   }).toList(),
+                                 //   onChanged: (String? newValue) {
+                                 //     setState(() {
+                                 //       selectedColor = newValue!;
+                                 //     });
+                                 //   },
+                                 // ),
+                                ],
+                              ),
                               actions: [
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
-                                  child: Text('Cancel'),
+                                  child: Text('Annuler'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                    apiService.joinGameSession(
+                                      sessionIdController.text,
+                                      selectedColor,
+                                    );
+                                  },
+                                  child: Text('Rejoindre'),
                                 ),
                               ],
                             );
@@ -86,50 +176,17 @@ class _HubState extends State<Hub> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          Icon(
-                              Icons.add,
-                          ),
-                          Text('Créer une partie'),
+                          Icon(Icons.qr_code),
+                          Text('Rejoindre une partie via l\'ID'),
                         ],
                       ),
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)), //padding
-                        //blue color, rounded borders white border 2 px, text color white
-                        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFFe77708)), //blue color
-                        shape: WidgetStateProperty.all<OutlinedBorder>(RoundedRectangleBorder(
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.all(20),
+                        backgroundColor: Color(0xFFe77708),
+                        shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
-                        )),
-                        foregroundColor: WidgetStateProperty.all<Color>(Colors.white), //text color white
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20),
-                  SizedBox(
-                    width: 250,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).push(
-                            MaterialPageRoute(builder: (context) => const QRViewExample())
-                        );
-                      },
-                      //icon + text
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Icon(
-                              Icons.qr_code,
-                          ),
-                          Text('Rejoindre une partie'),
-                        ],
-                      ),
-                      style: ButtonStyle(
-                        padding: WidgetStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)), //padding
-                        //blue color, rounded borders white border 2 px, text color white
-                        backgroundColor: WidgetStateProperty.all<Color>(Color(0xFFe77708)), //blue color
-                        shape: WidgetStateProperty.all<OutlinedBorder>(RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        )),
-                        foregroundColor: WidgetStateProperty.all<Color>(Colors.white), //text color white
+                        ),
+                        foregroundColor: Colors.white,
                       ),
                     ),
                   ),
@@ -142,4 +199,3 @@ class _HubState extends State<Hub> {
     );
   }
 }
-
