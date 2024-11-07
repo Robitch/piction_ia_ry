@@ -45,9 +45,7 @@ class MyApp extends StatelessWidget {
 
         useMaterial3: true,
       ),
-
-        home: Identification(),
-
+      home: ChallengeBuilder(gameSessionId: 201,)
     );
   }
 }

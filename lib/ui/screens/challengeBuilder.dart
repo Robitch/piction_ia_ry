@@ -1,162 +1,140 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:fk_toggle/fk_toggle.dart';
+import 'package:http/http.dart' as http;
+import 'package:piction_ia_ry/services/data.dart' as data;
 
-class Challenge {
-  String title;
-  int number;
-  String phrase;
-  List<String> forbiddenWords;
-
-  Challenge({
-    required this.title,
-    required this.number,
-    required this.phrase,
-    required this.forbiddenWords,
-  });
-}
 
 class ChallengeBuilder extends StatefulWidget {
-  const ChallengeBuilder({super.key});
+  final int gameSessionId;
+
+  const ChallengeBuilder({Key? key, required this.gameSessionId}) : super(key: key);
 
   @override
-  State<ChallengeBuilder> createState() => _ChallengeBuilderState();
+  _ChallengeBuilderState createState() => _ChallengeBuilderState();
 }
 
 class _ChallengeBuilderState extends State<ChallengeBuilder> {
-  List<Challenge> challenges = [];
+  final TextEditingController firstWordController = TextEditingController();
+  final TextEditingController secondWordController = TextEditingController();
+  final TextEditingController thirdWordController = TextEditingController();
+  final TextEditingController fourthWordController = TextEditingController();
+  final TextEditingController fifthWordController = TextEditingController();
+  final TextEditingController forbiddenWordsController = TextEditingController();
 
-  void _addChallenge(String title, String phrase, List<String> forbiddenWords) {
-    setState(() {
-      challenges.add(
-        Challenge(
-          title: title,
-          number: challenges.length + 1,
-          phrase: phrase,
-          forbiddenWords: forbiddenWords,
-        ),
-      );
-    });
-  }
+  int challengesSubmitted = 0;
+  String status = "lobby";
 
-  void _deleteChallenge(int index) {
-    setState(() {
-      challenges.removeAt(index);
-    });
-  }
-
-  void _showAddChallengeDialog() {
-    String selectedGender1 = "un";
-    String selectedLocation = "sur";
-    String selectedGender2 = "un";
-    TextEditingController word1Controller = TextEditingController();
-    TextEditingController word2Controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Ajouter un nouveau challenge'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  FkToggle(
-                    width: 50,
-                    height: 30,
-                    labels: const ['un', 'une'],
-                      selectedColor : Colors.orange
-                  ),
-                ],
-              ),
-              TextField(
-                controller: word1Controller,
-                decoration: const InputDecoration(hintText: 'Premier mot'),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  FkToggle(
-                    width: 50,
-                    height: 30,
-                    labels: const ['sur', 'dans'],
-                      selectedColor : Colors.orange
-
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  FkToggle(
-                    width: 50,
-                    height: 30,
-                    labels: const ['un', 'une'],
-                      selectedColor : Colors.orange
-
-                  ),
-                ],
-              ),
-              TextField(
-                controller: word2Controller,
-                decoration: const InputDecoration(hintText: 'Deuxième mot'),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Annuler'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Ajouter'),
-              onPressed: () {
-                String phrase =
-                    "$selectedGender1 ${word1Controller.text} $selectedLocation $selectedGender2 ${word2Controller.text}";
-                _addChallenge("Challenge", phrase, []);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
+  Future<void> fetchGameSessionStatus() async {
+    final String token = data.token;
+    final response = await http.get(
+      Uri.parse('https://pictioniary.wevox.cloud/api/game_sessions/${widget.gameSessionId}/status'),
+      headers: {'Authorization': 'Bearer  $token'},
     );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        status = json.decode(response.body)['status'];
+      });
+    }
+  }
+
+  Future<void> submitChallenge() async {
+    final List<String> forbiddenWords = forbiddenWordsController.text.split(',').map((word) => word.trim()).toList();
+
+    final challengeData = {
+      "first_word": firstWordController.text,
+      "second_word": secondWordController.text,
+      "third_word": thirdWordController.text,
+      "fourth_word": fourthWordController.text,
+      "fifth_word": fifthWordController.text,
+      "forbidden_words": forbiddenWords,
+    };
+
+    final response = await http.post(
+      Uri.parse('https://pictioniary.wevox.cloud/api/game_sessions/${widget.gameSessionId}/challenges'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer YOUR_JWT_TOKEN',
+      },
+      body: json.encode(challengeData),
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        challengesSubmitted++;
+      });
+
+      // Vérifie si tous les challenges ont été envoyés et change le statut si nécessaire
+      if (challengesSubmitted >= 3) {
+        await startDrawingPhase();
+      }
+    } else {
+      // Gérer l'erreur si besoin
+      print("Erreur lors de l'envoi du challenge : ${response.body}");
+    }
+  }
+
+  Future<void> startChallengePhase() async {
+    final response = await http.post(
+      Uri.parse('https://pictioniary.wevox.cloud/api/game_sessions/${widget.gameSessionId}/start'),
+      headers: {'Authorization': 'Bearer YOUR_JWT_TOKEN'},
+    );
+
+    if (response.statusCode == 200) {
+      setState(() {
+        status = "challenge";
+      });
+    }
+  }
+
+  Future<void> startDrawingPhase() async {
+    await fetchGameSessionStatus();
+    if (status == "challenge") {
+      // Passe la phase en "drawing" après que tous les challenges soient créés
+      setState(() {
+        status = "drawing";
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchGameSessionStatus();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Challenge Builder'),
+        title: Text('Créer un Challenge'),
+        centerTitle: true,
       ),
-      body: ListView.builder(
-        itemCount: challenges.length,
-        itemBuilder: (context, index) {
-          return Card(
-            margin: const EdgeInsets.all(10),
-            child: ListTile(
-              title: Text("${challenges[index].title} - #${challenges[index].number}"),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Phrase à trouver : ${challenges[index].phrase}"),
-                  Text("Mots interdits : ${challenges[index].forbiddenWords.join(', ')}"),
-                ],
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () => _deleteChallenge(index),
-              ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Session de jeu ID: ${widget.gameSessionId}', style: TextStyle(fontSize: 18)),
+            SizedBox(height: 16),
+            TextField(controller: firstWordController, decoration: InputDecoration(labelText: 'Premier mot')),
+            TextField(controller: secondWordController, decoration: InputDecoration(labelText: 'Deuxième mot')),
+            TextField(controller: thirdWordController, decoration: InputDecoration(labelText: 'Troisième mot')),
+            TextField(controller: fourthWordController, decoration: InputDecoration(labelText: 'Quatrième mot')),
+            TextField(controller: fifthWordController, decoration: InputDecoration(labelText: 'Cinquième mot')),
+            TextField(controller: forbiddenWordsController, decoration: InputDecoration(labelText: 'Mots interdits (séparés par des virgules)')),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: submitChallenge,
+              child: Text('Soumettre le challenge'),
             ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddChallengeDialog,
-        child: const Icon(Icons.add),
+            if (challengesSubmitted > 0)
+              Text('Challenges soumis : $challengesSubmitted / 3', style: TextStyle(fontSize: 16)),
+            SizedBox(height: 20),
+            if (status == "drawing")
+              Text('Tous les challenges sont créés, phase de dessin activée !', style: TextStyle(fontSize: 16, color: Colors.green)),
+          ],
+        ),
       ),
     );
   }
