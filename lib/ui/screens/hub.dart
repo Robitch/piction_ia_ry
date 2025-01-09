@@ -143,21 +143,6 @@ class _HubState extends State<Hub> {
                                         labelText: 'ID de la session',
                                       ),
                                   ),
-                                 // DropdownButton<String>(
-                                 //   value: selectedColor,
-                                 //   items: <String>['red', 'blue']
-                                 //       .map((String value) {
-                                 //     return DropdownMenuItem<String>(
-                                 //       value: value,
-                                 //       child: Text(value),
-                                 //     );
-                                 //   }).toList(),
-                                 //   onChanged: (String? newValue) {
-                                 //     setState(() {
-                                 //       selectedColor = newValue!;
-                                 //     });
-                                 //   },
-                                 // ),
                                 ],
                               ),
                               actions: [

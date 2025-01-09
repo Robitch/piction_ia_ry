@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:piction_ia_ry/services/api_service.dart';
 import 'package:piction_ia_ry/services/data.dart' as data;
+import 'package:qr_flutter/qr_flutter.dart';
 
 class TeamBuilder extends StatefulWidget {
   final String gameSessionId;
@@ -94,6 +95,7 @@ class _TeamBuilderState extends State<TeamBuilder> {
               'ID de la Session de Jeu: ${widget.gameSessionId}',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
+            _buildQRCode(widget.gameSessionId),
             SizedBox(height: 20),
             Expanded(
               child: Column(
@@ -190,6 +192,15 @@ class _TeamBuilderState extends State<TeamBuilder> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildQRCode(String gameSessionId) {
+    return QrImageView(
+      data: gameSessionId,
+      version: QrVersions.auto,
+      size: 200,
+      gapless: false,
     );
   }
 }
