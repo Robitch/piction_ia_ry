@@ -16,11 +16,18 @@ class _TeamBuilderState extends State<TeamBuilder> {
   List<int> teamBlue = [];
   List<int> teamOrange = [];
   bool isGameReady = false;
+  bool isActive = true;
 
   @override
   void initState() {
     super.initState();
     _initializeData();
+  }
+
+  @override
+  void dispose() {
+    isActive = false;
+    super.dispose();
   }
 
   Future<void> _initializeData() async {
@@ -86,7 +93,7 @@ class _TeamBuilderState extends State<TeamBuilder> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Team Builder'),
+        title: Text('Session de jeu [ID: ${widget.gameSessionId}]'),
         centerTitle: true,
         backgroundColor: Colors.orange,
         leading: IconButton(
@@ -109,11 +116,22 @@ class _TeamBuilderState extends State<TeamBuilder> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(
-              'ID de la Session de Jeu: ${widget.gameSessionId}',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+           // Text(
+             // 'ID de la Session de Jeu: ${widget.gameSessionId}',
+              // style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            // ),
+            //_buildQRCode(widget.gameSessionId) sous forme de card
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                        child: _buildQRCode(widget.gameSessionId),
+                    ),
             ),
-            _buildQRCode(widget.gameSessionId),
+
             SizedBox(height: 20),
             Expanded(
               child: Column(
@@ -138,18 +156,25 @@ class _TeamBuilderState extends State<TeamBuilder> {
                 ],
               ),
             ),
-            if (isGameReady)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
+              SizedBox(height: 20),
+              SizedBox(
+                width: 200,
                 child: ElevatedButton(
-                  onPressed: () => {},
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    backgroundColor: Colors.green,
+                  onPressed: isGameReady ? () => {} : null,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      // Icon(Icons.add),
+                      Text(isGameReady ? 'Lancer la partie' : 'En attente de joueurs'),
+                    ],
                   ),
-                  child: Text(
-                    'Lancer la Partie',
-                    style: TextStyle(fontSize: 18),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(20),
+                    backgroundColor: Color(0xFFe77708),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    foregroundColor: Colors.white,
                   ),
                 ),
               ),
@@ -177,7 +202,7 @@ class _TeamBuilderState extends State<TeamBuilder> {
                 Text(
                   teamName,
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 20,
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
@@ -217,7 +242,7 @@ class _TeamBuilderState extends State<TeamBuilder> {
     return QrImageView(
       data: gameSessionId,
       version: QrVersions.auto,
-      size: 200,
+      size: 150,
       gapless: false,
     );
   }

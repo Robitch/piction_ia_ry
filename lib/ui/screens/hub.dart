@@ -34,7 +34,29 @@ class _HubState extends State<Hub> {
 
   Future<void> joinGameSession() async {
     try {
-   //   await apiService.joinGameSession(sessionIdController.text, selectedColor);
+      //   await apiService.joinGameSession(sessionIdController.text, selectedColor);
+      final session = await apiService.getGameSession(sessionIdController.text);
+      if (session['blue_team']?.length == 2 && session['red_team']?.length == 2) {
+        // display alert
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Session pleine'),
+              content: Text('La session est pleine. Veuillez réessayer avec une autre session.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
       Navigator.of(context).push(MaterialPageRoute(
         builder: (context) => TeamBuilder(gameSessionId: sessionIdController.text),
       ));
