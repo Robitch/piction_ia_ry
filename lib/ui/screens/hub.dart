@@ -4,7 +4,7 @@ import 'package:piction_ia_ry/services/api_service.dart';
 import 'package:piction_ia_ry/ui/screens/teamBuilder.dart';
 import 'package:piction_ia_ry/services/data.dart' as data;
 
-
+import 'queue.dart'; // Importez le widget Queue pour afficher le loader
 
 class Hub extends StatefulWidget {
   const Hub({super.key});
@@ -20,15 +20,26 @@ class _HubState extends State<Hub> {
   final ApiService apiService = ApiService();
 
   Future<void> createGameSession() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Empêche la fermeture en cliquant en dehors
+      builder: (context) => const Queue(waitingText: 'Création de la partie...'),
+    );
+
     try {
       final sessionId = await apiService.createGameSession();
       await apiService.joinGameSession(sessionId, "blue");
       print('Session created and joined successfully');
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => TeamBuilder(gameSessionId: sessionId),
-      ));
+      Navigator.of(context).pop(); // Ferme le loader
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => TeamBuilder(gameSessionId: sessionId),
+        ),
+      );
     } catch (error) {
+      Navigator.of(context).pop(); // Ferme le loader
       print('Error creating or joining game session: $error');
+      showErrorDialog('Erreur lors de la création de la partie. Veuillez réessayer.');
     }
   }
 
@@ -63,6 +74,22 @@ class _HubState extends State<Hub> {
     } catch (error) {
       print('Error joining game session: $error');
     }
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erreur'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
