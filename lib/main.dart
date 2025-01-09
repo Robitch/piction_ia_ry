@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:piction_ia_ry/ui/screens/challengeBuilder.dart';
 import 'package:piction_ia_ry/ui/screens/hub.dart';
 import 'package:piction_ia_ry/ui/screens/identification.dart';
@@ -13,7 +14,11 @@ import 'package:piction_ia_ry/ui/screens/queue.dart';
 import 'package:piction_ia_ry/ui/screens/teamBuilder.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+      const ProviderScope(
+        child: MyApp(),
+      ),
+  );
 }
 
 class MyApp extends StatelessWidget {

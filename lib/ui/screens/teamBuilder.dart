@@ -38,6 +38,9 @@ class _TeamBuilderState extends State<TeamBuilder> {
     } catch (e) {
       print('Error fetching team data: $e');
     }
+
+    await Future.delayed(const Duration(seconds:  5));
+    _fetchTeamData();
   }
 
   Future<void> _joinTeam(String teamColor) async {
@@ -179,7 +182,7 @@ class _TeamBuilderState extends State<TeamBuilder> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (teamMembers.length < 2)
+                if (teamMembers.length < 2 && !teamMembers.contains(data.userId))
                   ElevatedButton(
                     onPressed: onJoinPressed,
                     child: Text('Rejoindre'),
