@@ -86,6 +86,21 @@ class _TeamBuilderState extends State<TeamBuilder> {
         title: Text('Team Builder'),
         centerTitle: true,
         backgroundColor: Colors.orange,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () async {
+            try {
+              // Appelle l'API pour quitter la session de jeu
+              await ApiService().leaveGameSession(widget.gameSessionId);
+              print('Session de jeu quittée avec succès.');
+            } catch (e) {
+              print('Erreur lors de la déconnexion : $e');
+            } finally {
+              // Retour à l'écran précédent
+              Navigator.pop(context);
+            }
+          },
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

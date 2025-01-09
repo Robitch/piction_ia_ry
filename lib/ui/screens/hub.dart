@@ -22,31 +22,13 @@ class _HubState extends State<Hub> {
   Future<void> createGameSession() async {
     try {
       final sessionId = await apiService.createGameSession();
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Session Created'),
-            content: Text('Game Session ID: $sessionId'),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  await apiService.joinGameSession(sessionId, "blue");
-                  print('Session joined');
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'),
-              ),
-            ],
-          );
-        },
-      ).then((value) {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => TeamBuilder(gameSessionId: sessionId),
-        ));
-      });
+      await apiService.joinGameSession(sessionId, "blue");
+      print('Session created and joined successfully');
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => TeamBuilder(gameSessionId: sessionId),
+      ));
     } catch (error) {
-      print('Error creating game session: $error');
+      print('Error creating or joining game session: $error');
     }
   }
 

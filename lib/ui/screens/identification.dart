@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:piction_ia_ry/ui/screens/hub.dart';
+import 'package:piction_ia_ry/ui/screens/queue.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:piction_ia_ry/services/data.dart' as data;
 import 'package:piction_ia_ry/services/api_service.dart';
+import 'package:piction_ia_ry/ui/screens/hub.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class Identification extends StatefulWidget {
   const Identification({super.key});
@@ -17,8 +17,6 @@ class _IdentificationState extends State<Identification> {
   final myController = TextEditingController();
   final passwordController = TextEditingController();
 
-  final String apiUrl = 'https://pictioniary.wevox.cloud/api';
-
   @override
   void dispose() {
     myController.dispose();
@@ -26,27 +24,50 @@ class _IdentificationState extends State<Identification> {
     super.dispose();
   }
 
+  // Fonction pour afficher le loader
+  void showLoader(String waitingText) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Queue(waitingText: waitingText),
+        );
+      },
+    );
+  }
+
+  // Fonction pour cacher le loader
+  void hideLoader() {
+    Navigator.of(context, rootNavigator: true).pop();
+  }
+
   // Fonction pour gérer la connexion
   Future<void> login() async {
+    showLoader('Connexion en cours...');
     try {
       await ApiService().login(myController.text, passwordController.text);
-      print('Login successful');
       await ApiService().fetchPlayerInfo();
-      print('Player info fetched');
-      Navigator.of(context).push(
+      hideLoader(); // Masquer le loader
+      Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const Hub()),
       );
     } catch (error) {
+      hideLoader(); // Masquer le loader en cas d'erreur
       showErrorDialog('Erreur de connexion. Veuillez réessayer.');
     }
   }
 
   // Fonction pour gérer l'inscription
   Future<void> register() async {
+    showLoader('Inscription en cours...');
     try {
       await ApiService().register(myController.text, passwordController.text);
-     login();
+      hideLoader(); // Masquer le loader après inscription réussie
+      login(); // Appeler la fonction login
     } catch (error) {
+      hideLoader(); // Masquer le loader en cas d'erreur
       showErrorDialog('Erreur d\'inscription. Veuillez réessayer.');
     }
   }
@@ -99,7 +120,6 @@ class _IdentificationState extends State<Identification> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Champ pour le pseudo
                   SizedBox(
                     width: 250,
                     child: TextField(
@@ -118,7 +138,6 @@ class _IdentificationState extends State<Identification> {
                     ),
                   ),
                   SizedBox(height: 20),
-                  // Champ pour le mot de passe
                   SizedBox(
                     width: 250,
                     child: TextField(
@@ -138,40 +157,44 @@ class _IdentificationState extends State<Identification> {
                     ),
                   ),
                   SizedBox(height: 20),
-                  // Bouton de connexion
                   SizedBox(
                     width: 250,
                     child: ElevatedButton(
                       onPressed: login,
                       child: Text('Connexion'),
                       style: ButtonStyle(
-                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)),
-                        backgroundColor: MaterialStateProperty.all<Color>(Colors.blue),
+                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                            EdgeInsets.all(20)),
+                        backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.blue),
                         shape: MaterialStateProperty.all<OutlinedBorder>(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                        foregroundColor:
+                        MaterialStateProperty.all<Color>(Colors.white),
                       ),
                     ),
                   ),
                   SizedBox(height: 20),
-                  // Bouton d'inscription
                   SizedBox(
                     width: 250,
                     child: ElevatedButton(
                       onPressed: register,
                       child: Text('Inscription'),
                       style: ButtonStyle(
-                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.all(20)),
-                        backgroundColor: MaterialStateProperty.all<Color>(Color(0xFFe77708)),
+                        padding: MaterialStateProperty.all<EdgeInsetsGeometry>(
+                            EdgeInsets.all(20)),
+                        backgroundColor:
+                        MaterialStateProperty.all<Color>(Color(0xFFe77708)),
                         shape: MaterialStateProperty.all<OutlinedBorder>(
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        foregroundColor: MaterialStateProperty.all<Color>(Colors.white),
+                        foregroundColor:
+                        MaterialStateProperty.all<Color>(Colors.white),
                       ),
                     ),
                   ),
