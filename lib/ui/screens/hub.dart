@@ -4,7 +4,7 @@ import 'package:piction_ia_ry/services/api_service.dart';
 import 'package:piction_ia_ry/ui/screens/teamBuilder.dart';
 import 'package:piction_ia_ry/services/data.dart' as data;
 
-
+import 'queue.dart'; // Importez le widget Queue pour afficher le loader
 
 class Hub extends StatefulWidget {
   const Hub({super.key});
@@ -20,27 +20,55 @@ class _HubState extends State<Hub> {
   final ApiService apiService = ApiService();
 
   Future<void> createGameSession() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Empêche la fermeture en cliquant en dehors
+      builder: (context) => const Queue(waitingText: 'Création de la partie...'),
+    );
+
     try {
       final sessionId = await apiService.createGameSession();
       await apiService.joinGameSession(sessionId, "blue");
       print('Session created and joined successfully');
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => TeamBuilder(gameSessionId: sessionId),
-      ));
+      Navigator.of(context).pop(); // Ferme le loader
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => TeamBuilder(gameSessionId: sessionId),
+        ),
+      );
     } catch (error) {
+      Navigator.of(context).pop(); // Ferme le loader
       print('Error creating or joining game session: $error');
+      showErrorDialog('Erreur lors de la création de la partie. Veuillez réessayer.');
     }
   }
 
   Future<void> joinGameSession() async {
     try {
-   //   await apiService.joinGameSession(sessionIdController.text, selectedColor);
-      Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => TeamBuilder(gameSessionId: sessionIdController.text),
-      ));
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => TeamBuilder(gameSessionId: sessionIdController.text),
+        ),
+      );
     } catch (error) {
       print('Error joining game session: $error');
     }
+  }
+
+  void showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Erreur'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -72,8 +100,8 @@ class _HubState extends State<Hub> {
                     ),
                     Flexible(
                       child: Text(
-                        'Bonjour ' + data.username + '!',
-                        style: TextStyle(
+                        'Bonjour ${data.username}!',
+                        style: const TextStyle(
                           fontSize: 26,
                         ),
                       ),
@@ -90,14 +118,14 @@ class _HubState extends State<Hub> {
                       onPressed: createGameSession,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
+                        children: const [
                           Icon(Icons.add),
                           Text('Créer une partie'),
                         ],
                       ),
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.all(20),
-                        backgroundColor: Color(0xFFe77708),
+                        padding: const EdgeInsets.all(20),
+                        backgroundColor: const Color(0xFFe77708),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -105,7 +133,7 @@ class _HubState extends State<Hub> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   SizedBox(
                     width: 250,
                     child: ElevatedButton(
@@ -114,16 +142,16 @@ class _HubState extends State<Hub> {
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
-                              title: Text('Rejoindre une partie via ID'),
+                              title: const Text('Rejoindre une partie via ID'),
                               content: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   TextField(
                                     controller: sessionIdController,
                                     keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                        labelText: 'ID de la session',
-                                      ),
+                                    decoration: const InputDecoration(
+                                      labelText: 'ID de la session',
+                                    ),
                                   ),
                                 ],
                               ),
@@ -132,14 +160,14 @@ class _HubState extends State<Hub> {
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                   },
-                                  child: Text('Annuler'),
+                                  child: const Text('Annuler'),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     Navigator.of(context).pop();
                                     joinGameSession();
                                   },
-                                  child: Text('Rejoindre'),
+                                  child: const Text('Rejoindre'),
                                 ),
                               ],
                             );
@@ -148,14 +176,14 @@ class _HubState extends State<Hub> {
                       },
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
+                        children: const [
                           Icon(Icons.qr_code),
                           Text('Rejoindre une partie via l\'ID'),
                         ],
                       ),
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.all(20),
-                        backgroundColor: Color(0xFFe77708),
+                        padding: const EdgeInsets.all(20),
+                        backgroundColor: const Color(0xFFe77708),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
